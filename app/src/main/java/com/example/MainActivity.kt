@@ -855,13 +855,14 @@ fun DashboardScreen(
                     }
                 }
                 "FILE" -> {
-                    // FILE TAB: Live source synchronization explorer & copy/share exports
+                    // FILE TAB: Live source synchronization explorer & copy/share exports with pure black professional theme
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
+                            .background(Color.Black)
                             .padding(16.dp)
                             .verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         // Action row for importing/exporting files
                         Row(
@@ -902,70 +903,136 @@ fun DashboardScreen(
                         // Metadata Editors - Shift Timeline Engine
                         Text(
                             text = "TRACK START DATETIME (GLOBAL SHIFT ENGINE)",
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = GeoSlate600)
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.White)
                         )
                         Text(
                             text = "Updating the start date/time below will dynamically adjust and shift every tracking timestamp (<when> element) throughout the entire KML track automatically.",
-                            style = MaterialTheme.typography.bodySmall.copy(color = GeoSlate600),
+                            style = MaterialTheme.typography.bodySmall.copy(color = GeoSlate400),
                             modifier = Modifier.padding(bottom = 4.dp)
                         )
-                        val currentDateTime = try {
-                            if (trackStartDatetime.isNotBlank()) 
-                                java.time.OffsetDateTime.parse(trackStartDatetime).toLocalDateTime()
-                            else java.time.LocalDateTime.now()
-                        } catch(e:Exception) { java.time.LocalDateTime.now() }
 
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedButton(
-                                onClick = {
-                                    android.app.DatePickerDialog(
-                                        context,
-                                        { _, y, m, d ->
-                                            val newTime = currentDateTime.withYear(y).withMonth(m+1).withDayOfMonth(d)
-                                            val iso = newTime.atOffset(java.time.ZoneOffset.UTC).format(java.time.format.DateTimeFormatter.ISO_INSTANT)
-                                            trackStartDatetime = iso
-                                            val updated = updateWhens(kmlInput, iso)
-                                            if (updated != kmlInput) kmlInput = updated
-                                        },
-                                        currentDateTime.year, currentDateTime.monthValue - 1, currentDateTime.dayOfMonth
-                                    ).show()
-                                },
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text("Date: ${currentDateTime.toLocalDate()}")
-                            }
+                        // Picker Card Container (pure dark beautiful professional design)
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E)),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                                val currentInstant = try {
+                                    if (trackStartDatetime.isNotBlank()) java.time.Instant.parse(trackStartDatetime) else java.time.Instant.now()
+                                } catch (e: Exception) {
+                                    java.time.Instant.now()
+                                }
+                                val localZoned = currentInstant.atZone(java.time.ZoneId.systemDefault())
+                                val utcZoned = currentInstant.atZone(java.time.ZoneId.of("UTC"))
+                                
+                                val dateFormater = java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM d, yyyy", java.util.Locale.US)
+                                val timeFormater = java.time.format.DateTimeFormatter.ofPattern("hh:mm:ss a (z)", java.util.Locale.US)
+                                val utcTimeFormater = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss 'UTC'", java.util.Locale.US)
 
-                            OutlinedButton(
-                                onClick = {
-                                    android.app.TimePickerDialog(
-                                        context,
-                                        { _, h, m ->
-                                            val newTime = currentDateTime.withHour(h).withMinute(m).withSecond(0)
-                                            val iso = newTime.atOffset(java.time.ZoneOffset.UTC).format(java.time.format.DateTimeFormatter.ISO_INSTANT)
-                                            trackStartDatetime = iso
-                                            val updated = updateWhens(kmlInput, iso)
-                                            if (updated != kmlInput) kmlInput = updated
+                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Text(
+                                        text = "CURRENT TRACK START TIME",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = GeoSlate400)
+                                    )
+                                    Text(
+                                        text = localZoned.format(dateFormater),
+                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold, color = Color.White)
+                                    )
+                                    Text(
+                                        text = localZoned.format(timeFormater),
+                                        style = MaterialTheme.typography.bodyMedium.copy(color = GeoPrimaryContainer, fontWeight = FontWeight.Medium)
+                                    )
+                                    Text(
+                                        text = "Formatted UTC: ${utcZoned.format(utcTimeFormater)}",
+                                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace, color = GeoSlate400)
+                                    )
+                                    Text(
+                                        text = "Raw XML Value: $trackStartDatetime",
+                                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace, color = GeoSlate400)
+                                    )
+                                }
+
+                                HorizontalDivider(color = GeoSlate600.copy(alpha = 0.5f))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Button(
+                                        onClick = {
+                                            android.app.DatePickerDialog(
+                                                context,
+                                                { _, y, m, d ->
+                                                    val newZonedDateTime = localZoned
+                                                        .withYear(y)
+                                                        .withMonth(m + 1)
+                                                        .withDayOfMonth(d)
+                                                    val newIso = newZonedDateTime.toInstant().toString()
+                                                    trackStartDatetime = newIso
+                                                    val updated = updateKmlDateTime(kmlInput, newIso)
+                                                    if (updated != kmlInput) {
+                                                        kmlInput = updated
+                                                    }
+                                                },
+                                                localZoned.year,
+                                                localZoned.monthValue - 1,
+                                                localZoned.dayOfMonth
+                                            ).show()
                                         },
-                                        currentDateTime.hour, currentDateTime.minute, true
-                                    ).show()
-                                },
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text("Time: ${currentDateTime.toLocalTime()}")
+                                        modifier = Modifier.weight(1f).height(46.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2C2C2C), contentColor = Color.White),
+                                        shape = RoundedCornerShape(10.dp)
+                                    ) {
+                                        Icon(Icons.Default.Edit, contentDescription = "Select Date", modifier = Modifier.size(18.dp), tint = Color.White)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("SET DATE", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                                    }
+
+                                    Button(
+                                        onClick = {
+                                            android.app.TimePickerDialog(
+                                                context,
+                                                { _, hour, minute ->
+                                                    val newZonedDateTime = localZoned
+                                                        .withHour(hour)
+                                                        .withMinute(minute)
+                                                        .withSecond(localZoned.second)
+                                                    val newIso = newZonedDateTime.toInstant().toString()
+                                                    trackStartDatetime = newIso
+                                                    val updated = updateKmlDateTime(kmlInput, newIso)
+                                                    if (updated != kmlInput) {
+                                                        kmlInput = updated
+                                                    }
+                                                },
+                                                localZoned.hour,
+                                                localZoned.minute,
+                                                false
+                                            ).show()
+                                        },
+                                        modifier = Modifier.weight(1f).height(46.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2C2C2C), contentColor = Color.White),
+                                        shape = RoundedCornerShape(10.dp)
+                                    ) {
+                                        Icon(Icons.Default.Info, contentDescription = "Select Time", modifier = Modifier.size(18.dp), tint = Color.White)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("SET TIME", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                                    }
+                                }
                             }
                         }
-                        
-                        HorizontalDivider(color = GeoSlate200, modifier = Modifier.padding(vertical = 4.dp))
+
+                        HorizontalDivider(color = GeoSlate600.copy(alpha = 0.5f), modifier = Modifier.padding(vertical = 4.dp))
 
                         // Code details metadata
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
-                        ) {
+						) {
                             Text(
                                 text = "RAW TRACK XML SYNTAX",
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = GeoSlate600)
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = Color.White)
                             )
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 IconButton(
@@ -978,12 +1045,12 @@ fun DashboardScreen(
                                     },
                                     modifier = Modifier.size(28.dp)
                                 ) {
-                                    Icon(Icons.Default.Info, contentDescription = "Copy XML text", tint = GeoSlate600, modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Default.Info, contentDescription = "Copy XML text", tint = Color.White, modifier = Modifier.size(18.dp))
                                 }
                             }
                         }
 
-                        // raw text field editor code display
+                        // raw text field editor code display (black background, white style code)
                         TextField(
                             value = kmlInput,
                             onValueChange = { 
@@ -996,16 +1063,16 @@ fun DashboardScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(300.dp)
-                                .border(1.dp, GeoSlate200, RoundedCornerShape(12.dp)),
-                            textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace, fontSize = 11.sp),
+                                .border(1.dp, GeoSlate600, RoundedCornerShape(12.dp)),
+                            textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = Color.White),
                             colors = TextFieldDefaults.colors(
-                                unfocusedContainerColor = GeoSlate50,
-                                focusedContainerColor = GeoSlate50,
+                                unfocusedContainerColor = Color(0xFF121212),
+                                focusedContainerColor = Color(0xFF121212),
                                 focusedIndicatorColor = Color.Transparent,
                                 unfocusedIndicatorColor = Color.Transparent,
-                                cursorColor = GeoPrimary,
-                                focusedTextColor = androidx.compose.ui.graphics.Color.Black,
-                                unfocusedTextColor = androidx.compose.ui.graphics.Color.Black
+                                cursorColor = Color.White,
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
                             ),
                             shape = RoundedCornerShape(12.dp)
                         )
@@ -1013,7 +1080,7 @@ fun DashboardScreen(
                         // Status notification bar
                         Text(
                             text = statusMessage,
-                            color = if (isError) MaterialTheme.colorScheme.error else GeoSlate600,
+                            color = if (isError) MaterialTheme.colorScheme.error else GeoSlate400,
                             style = MaterialTheme.typography.labelSmall,
                             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                             maxLines = 2
@@ -1283,10 +1350,14 @@ fun buildMinimalKml(points: List<KmlPoint>): String {
         trackNodes += "<gx:coord>${pt.longitude} ${pt.latitude} ${pt.altitude}</gx:coord>\n"
     }
 
+    val ldt = date.atZone(java.time.ZoneId.of("UTC")).toLocalDateTime()
+    val formatter = java.time.format.DateTimeFormatter.ofPattern("M/d/yy h:mm:ss a", java.util.Locale.US)
+    val formattedStr = ldt.format(formatter)
+
     return """<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2">
 <Document>
-<description><![CDATA[AlpineQuest Track 6/5/26 11:08:30 AM<br /><br />Generated by AlpineQuest®<br /><a href="https://www.alpinequest.net" alt="https://www.alpinequest.net">https://www.alpinequest.net</a>]]></description>
+<description><![CDATA[AlpineQuest Track $formattedStr<br /><br />Generated by AlpineQuest®<br /><a href="https://www.alpinequest.net" alt="https://www.alpinequest.net">https://www.alpinequest.net</a>]]></description>
 <visibility>1</visibility>
 <open>1</open>
 <Placemark>
@@ -1350,14 +1421,14 @@ fun updateWhens(xml: String, newStartStr: String): String {
     val match = whenRegex.find(xml)
     if (match != null) {
         try {
-            val oldInst = Instant.parse(match.groupValues[1])
-            val newInst = Instant.parse(newStartStr)
-            val offset = Duration.between(oldInst, newInst)
+            val oldInst = java.time.Instant.parse(match.groupValues[1])
+            val newInst = java.time.Instant.parse(newStartStr)
+            val offset = java.time.Duration.between(oldInst, newInst)
             
             return whenRegex.replace(xml) { m ->
                 try {
-                    val inst = Instant.parse(m.groupValues[1])
-                    "<when>\${inst.plus(offset)}</when>"
+                    val inst = java.time.Instant.parse(m.groupValues[1])
+                    "<when>" + inst.plus(offset).toString() + "</when>"
                 } catch (e: Exception) {
                     m.value
                 }
@@ -1367,6 +1438,43 @@ fun updateWhens(xml: String, newStartStr: String): String {
         }
     }
     return xml
+}
+
+fun updateDescriptionDateTime(xml: String, newInstant: java.time.Instant): String {
+    try {
+        val ldt = newInstant.atZone(java.time.ZoneId.of("UTC")).toLocalDateTime()
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("M/d/yy h:mm:ss a", java.util.Locale.US)
+        val formattedStr = ldt.format(formatter)
+        
+        val cdataRegex = "<description><!\\[CDATA\\[AlpineQuest Track .*?<br />".toRegex(RegexOption.DOT_MATCHES_ALL)
+        if (cdataRegex.containsMatchIn(xml)) {
+            return cdataRegex.replaceFirst(xml, "<description><![CDATA[AlpineQuest Track $formattedStr<br />")
+        }
+        
+        val anyCdataDesc = "<description><!\\[CDATA\\[(.*?)\\]\\]></description>".toRegex(RegexOption.DOT_MATCHES_ALL)
+        val match = anyCdataDesc.find(xml)
+        if (match != null) {
+            val content = match.groupValues[1]
+            if (content.contains("AlpineQuest Track")) {
+                val updatedContent = content.replace("AlpineQuest Track .*?<br />".toRegex(), "AlpineQuest Track $formattedStr<br />")
+                return xml.replace(content, updatedContent)
+            }
+        }
+    } catch (e: Exception) {
+        Log.e("MainActivity", "Error in updateDescriptionDateTime: ${e.message}", e)
+    }
+    return xml
+}
+
+fun updateKmlDateTime(xml: String, newIsoString: String): String {
+    var updated = updateWhens(xml, newIsoString)
+    try {
+        val newInstant = java.time.Instant.parse(newIsoString)
+        updated = updateDescriptionDateTime(updated, newInstant)
+    } catch (e: Exception) {
+        Log.e("MainActivity", "Error updating description date-time: ${e.message}")
+    }
+    return updated
 }
 
 // Sharing XML KML Content
