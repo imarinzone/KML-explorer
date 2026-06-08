@@ -1,0 +1,19 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <group
+        android:scaleX="2.5"
+        android:scaleY="2.5"
+        android:pivotX="12"
+        android:pivotY="12"
+        android:translateX="42"
+        android:translateY="42">
+        <!-- Edit Location Icon -->
+        <path
+            android:fillColor="#4ADE80"
+            android:pathData="M16.125,9L15,7.875L16.05,6.825C16.325,6.55 16.775,6.55 17.05,6.825L18.175,7.95C18.45,8.225 18.45,8.675 18.175,8.95L16.125,9ZM15,10.05L11,14.05V15.175H12.125L16.125,11.175L15,10.05ZM12,22C12,22 5,14.525 5,9.5C5,5.35 8.35,2 12,2C15.65,2 19,5.35 19,9.5C19,10.75 18.625,11.975 18.025,13.025L16.425,11.425C16.775,10.825 17,10.15 17,9.5C17,6.45 14.55,4 12,4C9.45,4 7,6.45 7,9.5C7,13.2 12,19.225 12,19.225L12,22Z" />
+    </group>
+</vector>

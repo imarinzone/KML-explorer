@@ -1,0 +1,6 @@
+{
+  "name": "KML Explorer",
+  "description": "Show geographical coordinates from a KML file on a minimal dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
